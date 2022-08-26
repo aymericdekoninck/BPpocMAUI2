@@ -1,0 +1,108 @@
+﻿@page "/counter"
+
+<h1>Camera</h1>
+
+<button class="btn btn-primary" @onclick="TakePhoto">Take Photo</button>
+
+<button class="btn btn-primary" @onclick="ChoosePhoto">Choose a photo</button>
+
+<button class="btn btn-primary" @onclick="TakeVideo">Take Video</button>
+
+<button class="btn btn-primary" @onclick="ChooseVideo">Choose Video</button>
+
+
+@if (imageSource is not null)
+{
+    <p>
+        <img src="@imageSource" alt="Sample Photo" width="200" height="200">
+    </p>
+}
+
+@if (videoSource is not null)
+{
+    <p>
+        <video src="@videoSource" controls="controls" width="200" height="200" />
+    </p>
+}
+
+@code {
+
+    private string? imageSource;
+    private string? videoSource;
+
+    async Task TakePhoto()
+    {
+        if (MediaPicker.IsCaptureSupported)
+        {
+            FileResult photo = await MediaPicker.CapturePhotoAsync();
+            await LoadImageAsync(photo);
+        }
+    }
+
+    async Task TakeVideo()
+    {
+        if (MediaPicker.IsCaptureSupported)
+        {
+            FileResult video = await MediaPicker.CaptureVideoAsync();
+            await LoadVideoAsync(video);
+        }
+    }
+
+    async Task ChoosePhoto()
+    {
+        if (MediaPicker.IsCaptureSupported)
+        {
+            FileResult photo = await MediaPicker.PickPhotoAsync();
+            await LoadImageAsync(photo);
+        }
+    }
+
+    async Task ChooseVideo()
+    {
+        if (MediaPicker.IsCaptureSupported)
+        {
+            FileResult video = await MediaPicker.PickVideoAsync();
+            await LoadVideoAsync(video);
+        }
+    }
+
+        async Task LoadImageAsync(FileResult media)
+        {
+            // canceled
+            if (media == null)
+            {
+                imageSource = null;
+                return;
+            }
+
+            var newFile = Path.Combine(FileSystem.CacheDirectory, media.FileName);
+            using (var stream = await media.OpenReadAsync())
+            using (var newStream = File.OpenWrite(newFile))
+            await stream.CopyToAsync(newStream);
+
+            var imageBytes = File.ReadAllBytes(newFile);
+            imageSource = Convert.ToBase64String(imageBytes);
+            imageSource = string.Format("data:image;base64,{0}", imageSource);
+        }
+
+        async Task LoadVideoAsync(FileResult media)
+    {
+        // canceled
+        if (media == null)
+        {
+            videoSource = null;
+            return;
+        }
+
+            var newFile = Path.Combine(FileSystem.CacheDirectory, media.FileName);
+            using (var stream = await media.OpenReadAsync())
+            using (var newStream = File.OpenWrite(newFile))
+                await stream.CopyToAsync(newStream);
+
+            var videoBytes = File.ReadAllBytes(newFile);
+            videoSource = Convert.ToBase64String(videoBytes);
+            videoSource = string.Format("data:video/mp4;base64,{0}", videoSource);
+            Console.WriteLine(videoSource);
+            
+        }
+}

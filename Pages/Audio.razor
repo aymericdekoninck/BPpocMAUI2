@@ -1,0 +1,57 @@
+﻿@page "/audio"
+
+<h1>Audio</h1>
+
+<button class="btn btn-primary" @onclick="ChooseAudio">Choose audio</button>
+
+@if (audioSource is not null)
+{
+    <p>
+        <audio src="@audioSource" alt="Sample audio" width="200" height="200" controls="controls"/>
+    </p>
+}
+
+@code {
+
+    private string? audioSource;
+
+    async Task ChooseAudio()
+    {
+            try
+        {
+            var result = await FilePicker.PickAsync();
+            if (result != null)
+            {
+                if (result.FileName.EndsWith("mp3", StringComparison.OrdinalIgnoreCase))
+                {
+                    await LoadAudioAsync(result);
+                    }
+            }
+        
+        }
+        catch (Exception ex)
+        {
+            // The user canceled or something went wrong
+        }
+    }
+
+    async Task LoadAudioAsync(FileResult media)
+    {
+        // canceled
+        if (media == null)
+        {
+            audioSource = null;
+            return;
+        }
+
+        var newFile = Path.Combine(FileSystem.CacheDirectory, media.FileName);
+        using (var stream = await media.OpenReadAsync())
+        using (var newStream = File.OpenWrite(newFile))
+            await stream.CopyToAsync(newStream);
+
+        var audioBytes = File.ReadAllBytes(newFile);
+        audioSource = Convert.ToBase64String(audioBytes);
+        audioSource = string.Format("data:audio/mp3;base64,{0}", audioSource);
+
+    }
+}

@@ -1,0 +1,25 @@
+﻿@page "/"
+
+<h1>Text input</h1>
+<p>
+    <label>
+        @message
+    </label>
+</p>
+
+<div>
+    <input placeholder="bericht hier invullen..." @bind="currentValue" />
+    <button class="btn btn-primary" @onclick="SendText">send</button>
+</div>
+
+
+
+@code{
+    private string message = "";
+    private string currentValue;
+
+    private void SendText()
+    {
+        message = currentValue;
+    }
+}
